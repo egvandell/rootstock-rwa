@@ -9,7 +9,8 @@ document.addEventListener('DOMContentLoaded', async function () {
   const dataPointValueInput = document.getElementById('dataPointValue');
   let provider, signer, assetManagerContract;
 //  const contractAddress = '0x5FbDB2315678afecb367f032d93F642f64180aa3';   //hardhat url
-  const contractAddress = '0x08cd7c38AF7c4d5Aa6f14E704c7a18Fb1957F28E';   //testnet url
+//  const contractAddress = '0x08cd7c38AF7c4d5Aa6f14E704c7a18Fb1957F28E';   //testnet url1
+  const contractAddress = '0x9b686A4f2E6C93E2765Aa8D7E33e11a9220277bb';   //testnet url2
   let contractABI = []; // Will be loaded from external file
   let networks = {};
 
@@ -60,7 +61,7 @@ document.addEventListener('DOMContentLoaded', async function () {
           assetsList.appendChild(li);
           asset.dataPoints.forEach((dp, index) => {
               const dpLi = document.createElement('li');
-              dpLi.innerHTML = `--- Data Point ${index}: Name: ${dp.name}, Value: ${dp.value}, Timestamp: ${new Date(dp.timestamp * 1000).toLocaleString()}, Needs Approval: ${dp.needsApproval}`;
+              dpLi.innerHTML = `--- Data Point ${index}: Name: ${dp.name}, Value: ${dp.value}, Needs Approval: ${dp.needsApproval}`;
               li.appendChild(dpLi);
           });
       }
@@ -74,12 +75,29 @@ document.addEventListener('DOMContentLoaded', async function () {
 
 //    const dataPointTimestamp = Math.floor(Date.now() / 1000); // Get current timestamp in seconds
 
-    const dataPoint = {name: dataPointName, value: dataPointValue, timestamp: dataPointTimestamp, needsApproval: false};
+
+    console.log("Asset Name:", assetName);
+    console.log("Asset Address:", assetAddress); // Verify if this is used in the contract function
+    console.log("Data Point Name:", dataPointName);
+    console.log("Data Point Value:", dataPointValue);
+
+    if (isNaN(dataPointValue)) {
+        alert("Invalid data point value. Please enter a valid number.");
+        return;
+    }
+
+    const dataPoint = {name: dataPointName, value: dataPointValue, needsApproval: false};
     const initialDataPoints = [dataPoint];
+
+    console.log("Data Point to be added:", dataPoint);
+    console.log("Starting to add asset...");
+
+
 
     console.log("starting add asset");
     try {
         const tx = await assetManagerContract.registerAsset(assetName, initialDataPoints);
+        console.log("starting add asset2");
         await tx.wait();
         alert("Asset added successfully!");
         await displayAssets(); // Refresh asset list

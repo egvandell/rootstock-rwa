@@ -60,7 +60,7 @@ describe("AssetManager", function () {
         // Add a new temperature data point with excessive deviation
         await assetManager.addDataPoint(0, "temperature", 90);
         
-        const [, , , needsApproval] = await assetManager.getDataPoint(0, 1); // Make sure index 1 is correct
+        const [, , needsApproval] = await assetManager.getDataPoint(0, 1); // Make sure index 1 is correct
         
         expect(needsApproval).to.be.true; // Check if the data point requires approval
     });

@@ -26,19 +26,5 @@
         "symbol": "RBTC",
         "decimals": 18
       }
-    },
-    "hardhatLocal": {
-      "chainName": "Hardhat Local Network",
-      "chainId": "0x7A69", 
-      "rpcUrls": [
-        "http://127.0.0.1:8545"
-      ],
-      "blockExplorerUrls": [
-        "http://localhost:1234" 
-      ],
-      "nativeCurrency": {
-        "symbol": "ETH",
-        "decimals": 18
-      }
     }
   }

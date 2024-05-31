@@ -7,7 +7,6 @@ contract AssetManager is Ownable {
     struct DataPoint {
         string name;
         int256 value;
-        uint256 timestamp;
         bool needsApproval;
     }
 
@@ -23,9 +22,9 @@ contract AssetManager is Ownable {
     uint256 public deviationThreshold;
 
     event AssetCreated(uint256 assetId, string name);
-    event DataPointAdded(uint256 assetId, string dataPointName, int256 value, uint256 timestamp);
-    event DataPointQueued(uint256 assetId, string dataPointName, int256 value, uint256 timestamp);
-    event DataPointApproved(uint256 assetId, string dataPointName, int256 value, uint256 timestamp);
+    event DataPointAdded(uint256 assetId, string dataPointName, int256 value);
+    event DataPointQueued(uint256 assetId, string dataPointName, int256 value);
+    event DataPointApproved(uint256 assetId, string dataPointName, int256 value);
 
     constructor(uint256 _deviationThreshold) Ownable(msg.sender) {
         deviationThreshold = _deviationThreshold;
@@ -51,9 +50,9 @@ contract AssetManager is Ownable {
     }
 
     function getDataPoint(uint256 assetId, uint256 index) external view returns 
-        (string memory, int256, uint256, bool) {
+        (string memory, int256, bool) {
         DataPoint storage dataPoint = assets[assetId].dataPoints[index];
-        return (dataPoint.name, dataPoint.value, dataPoint.timestamp, dataPoint.needsApproval);
+        return (dataPoint.name, dataPoint.value, dataPoint.needsApproval);
     }
 
    function getLastValue(uint256 assetId, string memory dataPointName) internal view returns (int256, bool) {
@@ -83,15 +82,14 @@ contract AssetManager is Ownable {
         DataPoint memory newDataPoint = DataPoint({
             name: dataPointName,
             value: value,
-            timestamp: block.timestamp,
             needsApproval: needsApproval
         });
 
         asset.dataPoints.push(newDataPoint);
         if (needsApproval) {
-            emit DataPointQueued(assetId, dataPointName, value, block.timestamp);
+            emit DataPointQueued(assetId, dataPointName, value);
         } else {
-            emit DataPointAdded(assetId, dataPointName, value, block.timestamp);
+            emit DataPointAdded(assetId, dataPointName, value);
         }
     }
 
@@ -114,6 +112,6 @@ contract AssetManager is Ownable {
         require(dataPoint.needsApproval, "Data point does not need approval");
 
         dataPoint.needsApproval = false;
-        emit DataPointApproved(assetId, dataPoint.name, dataPoint.value, dataPoint.timestamp);
+        emit DataPointApproved(assetId, dataPoint.name, dataPoint.value);
     }
 }
