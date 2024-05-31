@@ -54,19 +54,28 @@ document.addEventListener('DOMContentLoaded', async function () {
   }
 
   async function displayAssets() {
-      const assetCount = await assetManagerContract.nextAssetId();
-      for (let i = 0; i < assetCount; i++) {
-          const asset = await assetManagerContract.assets(i);
-          const li = document.createElement('li');
-          li.innerHTML = `Asset Name: ${asset.name}, Address: ${asset.assetAddress}`;
-          assetsList.appendChild(li);
-          asset.dataPoints.forEach((dp, index) => {
-              const dpLi = document.createElement('li');
-              dpLi.innerHTML = `--- Data Point ${index}: Name: ${dp.name}, Value: ${dp.value}, Needs Approval: ${dp.needsApproval}`;
-              li.appendChild(dpLi);
-          });
-      }
-  }
+    const assetCount = await assetManagerContract.nextAssetId();
+    assetsList.innerHTML = ''; // Clear the list before adding new entries
+    for (let i = 0; i < assetCount; i++) {
+        const asset = await assetManagerContract.assets(i);
+        const li = document.createElement('li');
+        li.innerHTML = `Asset Name: ${asset.name}, Address: ${asset.assetAddress}`;
+        assetsList.appendChild(li);
+        
+        // Check if dataPoints exists before trying to access it
+        if (asset.dataPoints && asset.dataPoints.length > 0) {
+            asset.dataPoints.forEach((dp, index) => {
+                const dpLi = document.createElement('li');
+                dpLi.innerHTML = `--- Data Point ${index}: Name: ${dp.name}, Value: ${dp.value}, Needs Approval: ${dp.needsApproval}`;
+                li.appendChild(dpLi);
+            });
+        } else {
+            const noDataLi = document.createElement('li');
+            noDataLi.innerHTML = "--- No data points available for this asset.";
+            li.appendChild(noDataLi);
+        }
+    }
+}
 
   async function addAsset() {
     const assetName = assetNameInput.value;
