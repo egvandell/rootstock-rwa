@@ -10,7 +10,8 @@ document.addEventListener('DOMContentLoaded', async function () {
   let provider, signer, assetManagerContract;
 //  const contractAddress = '0x5FbDB2315678afecb367f032d93F642f64180aa3';   //hardhat url
 //  const contractAddress = '0x08cd7c38AF7c4d5Aa6f14E704c7a18Fb1957F28E';   //testnet url1
-  const contractAddress = '0x9b686A4f2E6C93E2765Aa8D7E33e11a9220277bb';   //testnet url2
+//  const contractAddress = '0x9b686A4f2E6C93E2765Aa8D7E33e11a9220277bb';   //testnet url2
+  const contractAddress = '0x333610fb374EcAc6eA848EB1f39A6520963E0DF8';   //testnet url3
   let contractABI = []; // Will be loaded from external file
   let networks = {};
 
