@@ -7,16 +7,14 @@ contract AssetManager is Ownable {
     struct DataPoint {
         string name;
         int256 value;
-        int256 idealValue;
-        string impactRule; 
         uint256 timestamp;
         bool needsApproval;
     }
 
     struct Asset {
         string name;
+        address assetAddress;
         DataPoint[] dataPoints;
-        int256 value;
         bool exists;
     }
 
@@ -33,10 +31,9 @@ contract AssetManager is Ownable {
         deviationThreshold = _deviationThreshold;
     }
 
-    function registerAsset(string memory name, int256 initialValue, DataPoint[] memory initialDataPoints) public onlyOwner {
+     function registerAsset(string memory name, DataPoint[] memory initialDataPoints) public onlyOwner {
         Asset storage newAsset = assets[nextAssetId];
         newAsset.name = name;
-        newAsset.value = initialValue;
         newAsset.exists = true;
         
         for (uint256 i = 0; i < initialDataPoints.length; i++) {
@@ -47,83 +44,76 @@ contract AssetManager is Ownable {
         nextAssetId++;
     }
 
-    function addDataPoint(
-        uint256 assetId,
-        string memory dataPointName,
-        int256 value
-    ) public onlyOwner {
+    function getAsset(uint256 assetId) external view returns 
+        (string memory, address, bool) {
+        Asset storage asset = assets[assetId];
+        return (asset.name, asset.assetAddress, asset.exists);
+    }
+
+    function getDataPoint(uint256 assetId, uint256 index) external view returns 
+        (string memory, int256, uint256, bool) {
+        DataPoint storage dataPoint = assets[assetId].dataPoints[index];
+        return (dataPoint.name, dataPoint.value, dataPoint.timestamp, dataPoint.needsApproval);
+    }
+
+   function getLastValue(uint256 assetId, string memory dataPointName) internal view returns (int256, bool) {
+        Asset storage asset = assets[assetId];
+        if (asset.dataPoints.length > 0) {
+            for (int256 i = int256(asset.dataPoints.length) - 1; i >= 0; i--) {
+                DataPoint storage dataPoint = asset.dataPoints[uint256(i)];
+                if (keccak256(abi.encodePacked(dataPoint.name)) == keccak256(abi.encodePacked(dataPointName))) {
+                    return (dataPoint.value, true);
+                }
+            }
+        }
+        return (0, false);  // Return 0 and false if no previous data points are found
+    }
+
+    function addDataPoint(uint256 assetId, string memory dataPointName, int256 value) public onlyOwner {
         require(assets[assetId].exists, "Asset does not exist");
         Asset storage asset = assets[assetId];
-        bool found = false;
-        uint256 dataPointIndex;
 
-        for (uint256 i = 0; i < asset.dataPoints.length; i++) {
-            if (keccak256(bytes(asset.dataPoints[i].name)) == keccak256(bytes(dataPointName))) {
-                dataPointIndex = i;
-                found = true;
-                break;
-            }
+        (int256 lastValue, bool found) = getLastValue(assetId, dataPointName);
+        bool needsApproval = false;
+        if (found) {
+            int256 deviation = value - lastValue;
+            needsApproval = isDeviationExcessive(deviation, lastValue);
         }
 
-        require(found, "Data point not found in asset");
+        DataPoint memory newDataPoint = DataPoint({
+            name: dataPointName,
+            value: value,
+            timestamp: block.timestamp,
+            needsApproval: needsApproval
+        });
 
-        DataPoint storage dataPoint = asset.dataPoints[dataPointIndex];
-        int256 deviation = value - dataPoint.idealValue;
-        
-        if (isDeviationExcessive(deviation)) {
-            dataPoint.needsApproval = true;
-            dataPoint.value = value;
+        asset.dataPoints.push(newDataPoint);
+        if (needsApproval) {
             emit DataPointQueued(assetId, dataPointName, value, block.timestamp);
-            return;
-        }
-
-        dataPoint.value = value;
-        emit DataPointAdded(assetId, dataPointName, value, block.timestamp);
-        adjustAssetValue(asset, dataPoint, deviation);
-    }
-
-    function isDeviationExcessive(int256 deviation) internal view returns (bool) {
-        if (deviation < 0) {
-            deviation = -deviation;
-        }
-        return deviation > int256(deviationThreshold);
-    }
-
-    function adjustAssetValue(Asset storage asset, DataPoint memory dataPoint, int256 deviation) internal {
-        if (keccak256(bytes(dataPoint.impactRule)) == keccak256(bytes("temperature"))) {
-            if (deviation != 0) {
-                asset.value -= (deviation * 200) / 5; // 2% decrease per 5 degrees deviation
-            }
-        } else if (keccak256(bytes(dataPoint.impactRule)) == keccak256(bytes("mileage"))) {
-            if (deviation > 0) {
-                asset.value -= (deviation * 100) / 1000; // 1% decrease per 1000 miles deviation
-            }
-        } else if (keccak256(bytes(dataPoint.impactRule)) == keccak256(bytes("soil_quality"))) {
-            if (deviation != 0) {
-                asset.value -= (deviation * 50) / 1; // 0.5% decrease per 0.1 unit deviation
-            }
-        } else if (keccak256(bytes(dataPoint.impactRule)) == keccak256(bytes("humidity"))) {
-            if (dataPoint.value > 70) {
-                asset.value -= ((dataPoint.value - 70) * 50) / 1; // 0.5% decrease per percentage point above 70%
-            }
         } else {
-            // Algorithm will need to be developed
-            asset.value = asset.value;
+            emit DataPointAdded(assetId, dataPointName, value, block.timestamp);
         }
+    }
+
+    function isDeviationExcessive(int256 deviation, int256 lastValue) internal view returns (bool) {
+        // Calculate 3% of the last value using integer multiplication to avoid decimals
+        // Since Solidity does not support decimals, we multiply first then divide by 100
+        int256 threshold = (abs(lastValue) * int256(deviationThreshold)) / 100;
+
+        return abs(deviation) > threshold;
+    }
+
+    function abs(int256 x) internal pure returns (int256) {
+        return x >= 0 ? x : -x;
     }
 
     function approveDataPoint(uint256 assetId, uint256 dataPointIndex) public onlyOwner {
         require(assets[assetId].exists, "Asset does not exist");
-        Asset storage asset = assets[assetId];
-        require(dataPointIndex < asset.dataPoints.length, "Invalid data point index");
-
-        DataPoint storage dataPoint = asset.dataPoints[dataPointIndex];
+        require(dataPointIndex < assets[assetId].dataPoints.length, "Invalid data point index");
+        DataPoint storage dataPoint = assets[assetId].dataPoints[dataPointIndex];
         require(dataPoint.needsApproval, "Data point does not need approval");
 
         dataPoint.needsApproval = false;
         emit DataPointApproved(assetId, dataPoint.name, dataPoint.value, dataPoint.timestamp);
-
-        int256 deviation = dataPoint.value - dataPoint.idealValue;
-        adjustAssetValue(asset, dataPoint, deviation);
     }
 }

@@ -222,5 +222,12 @@
   "repository": {
     "type": "git",
     "url": "git+https://github.com/egvandell/rootstock-rwa.git"
+  },
+  "bugs": {
+    "url": "https://github.com/egvandell/rootstock-rwa/issues"
+  },
+  "homepage": "https://github.com/egvandell/rootstock-rwa#readme",
+  "directories": {
+    "test": "test"
   }
 }

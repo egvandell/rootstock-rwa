@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Asset Manager Interface</title>
+  <script src="https://cdn.ethers.io/lib/ethers-5.2.umd.min.js"></script>
+</head>
+<body>
+    <div>
+      <h1>Asset Manager</h1>
+      <button id="connectButton">Connect Wallet</button>
+      <div id="walletAddress"></div>
+      <h2>Assets</h2>
+      <ul id="assetsList"></ul>
+    </div>
+
+    <div>
+      <h2>Add New Asset</h2>
+      <label for="assetName">Real World Asset (RWA) Name:</label>
+      <input id="assetName" type="text" placeholder="Enter Asset Name" required>
+      <br>
+      <label for="assetAddress">Real World Asset (RWA) Address:</label>
+      <input id="assetAddress" type="text" placeholder="Enter Asset Address" required>
+      <br>
+      <label for="dataPointName">Data Point Name:</label>
+      <input id="dataPointName" type="text" placeholder="Enter Data Point Name" required>
+      <br>
+      <label for="dataPointValue">Data Point Value:</label>
+      <input id="dataPointValue" type="number" placeholder="Enter Data Point Value" required>
+      <br>
+      <button id="addAssetButton">Add Asset</button>
+    </div>
+    
+
+    <script src="app.js"></script>
+</body>
+</html>
